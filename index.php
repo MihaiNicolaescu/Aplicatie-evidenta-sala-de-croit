@@ -1,5 +1,6 @@
 <?php
     require_once "connect.php";
+    require_once "order.php";
     session_start();
     if($_SESSION['loggedIn'] == false):
         header("location: login.php");
@@ -10,10 +11,18 @@
         $_SESSION['username'] = "None";
         header("location: login.php");
     }
-    if(isset($_POST['procesare-comanda'])){
+    if(isset($_POST['delete-order'])){
+        $id = $_GET['id'];
+        $query = "DELETE FROM comenzi WHERE id='$id'";
+        mysqli_query($connect, $query);
+        $query = "DELETE FROM span WHERE id_order='$id'";
+        mysqli_query($connect, $query);
+        header("location: index.php");
+    }
+    if(isset($_POST['procesare-comanda'])) {
         $order_name = $_POST['nume_comanda'];
         $size = "";
-        if(empty($order_name) == false) {
+        if (empty($order_name) == false) {
             $size = $size . " " . $_POST['marime_1'] . " " . $_POST['marime_2'] . " " . $_POST['marime_3'] . " " . $_POST['marime_4'] . " " . $_POST['marime_5'] . " " . $_POST['marime_6'] . " " . $_POST['marime_7'] . " " . $_POST['marime_8'] . " " . $_POST['marime_9'] . " " . $_POST['marime_10'];
             $region = $_POST['regiune'];
             $user_id = $_SESSION['id_user'];
@@ -26,7 +35,7 @@
             } else {
                 header("location: index.php");
             }
-        }else{
+        } else {
             echo "nu e bine";
         }
     }
@@ -40,36 +49,77 @@
 </head>
 
 <?php
-if($_SESSION['loggedIn'] == true):
-    $id_user = $_SESSION['id_user'];
-    $query = "SELECT * FROM comenzi WHERE id_user = $id_user";
-    $result = mysqli_query($connect, $query);
-    if($result):
-        $rows = mysqli_fetch_assoc($result);
-    endif;
+if($_SESSION['loggedIn'] == true){
+$id_user = $_SESSION['id_user'];
+$query = "SELECT * FROM comenzi WHERE id_user = $id_user";
+$result = mysqli_query($connect, $query);
+if ($result):
+    $rows = mysqli_fetch_assoc($result);
+endif;
 
 ?>
 <body>
 <nav class="navbar">
-    <p style="font-size: 25px; font-weight: bolder">Bine ai revenit, <?php echo $_SESSION['last_name'];?></p>
+    <p style="font-size: 25px; font-weight: bolder">Bine ai revenit, <?php echo $_SESSION['last_name']; ?></p>
     <form method="post">
-        <button class="btn btn-deconnect" style="background-color: aliceblue" type="submit" name="deconect-btn">Deconectare</button>
+        <button class="btn btn-deconnect" style="background-color: aliceblue" type="submit" name="deconect-btn">
+            Deconectare
+        </button>
     </form>
 </nav>
 <div class="container-fluid" style="margin-top: 10px;">
     <div class="row">
         <div class="col-6">
-            <!--AFISAREA COMENZIOR EXISTENTE -->
-            <?php
-            $id_user = $_SESSION['id_user'];
-            $query = "SELECT * FROM comenzi WHERE id_user = $id_user";
-            $result = mysqli_query($connect, $query);
-            if($result){
-                while($row = mysqli_fetch_assoc($result)){
-                    echo $row['name'] . " ";
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Nr</th>
+                    <th scope="col">Nume comanda</th>
+                    <th scope="col">Total bucati</th>
+                    <th scope="col">Procesare</th>
+                    <th scope="col">Șterge comanda</th>
+                </tr>
+                </thead>
+                <!--AFISAREA COMENZIOR EXISTENTE -->
+                <?php
+                $id_user = $_SESSION['id_user'];
+                $query = "SELECT * FROM comenzi WHERE id_user = $id_user ORDER BY id DESC ";
+                $result = mysqli_query($connect, $query);
+                $index = 1;
+                $array = [];
+                if ($result) {
+                    $count = 0;
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        $array[$count] = new order($row['id'], $row['id_user'], $row['region'], $row['initial_sizes'], $row['completed'], $row['name'], $row['sizes']);
+                        $count++;?>
+                        <tbody>
+                            <tr id="ordersRow" id="linie-comanda" onclick="getIdOrder(this)">
+                                <th><?php echo $index; $index++; ?></th>
+                                <?php
+                                $sizes = explode(" ", $row['initial_sizes']);
+                                $total = 0;
+                                for ($i = 0; $i<sizeof($sizes); $i++)
+                                    $total += (int)$sizes[$i];
+                                ?>
+                                <td><?php echo $row['name']; ?></td>
+                                <td><?php echo $total; ?></td>
+                                <?php
+                                if ($row['completed'] == 0) {
+                                    ?>
+                                    <td><?php echo "Incompleta" ?></td><?php
+                                } else { ?>
+                                    <td><?php echo "Completata" ?></td><?php
+                                }
+                                ?>
+                                <td><form method="post" action="index.php?id=<?php echo $row['id'] ?>"><button style="width: 100%;" class="btn btn-danger" name="delete-order">Delete</button></form></td>
+                            </tr>
+                        </tbody><?php
+                    }
                 }
-            }
-            ?>
+                $i = sizeof($array);
+                $_SESSION['orders'] = $array;
+                ?>
+            </table>
         </div>
         <div class="col-4">
             <!--adaugarea unei comenzi noi -->
@@ -100,7 +150,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_1">XXS</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" value="0" name="marime_1" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" value="0" name="marime_1"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -108,7 +159,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_2">XS</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_2" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_2" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -116,7 +168,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_3">S</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_3" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_3" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -124,7 +177,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_4">M</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_4" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_4" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -132,7 +186,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_5">L</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_5" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_5" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -140,7 +195,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_6">XL</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_6" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_6" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -148,7 +204,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_7">2XL</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_7" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_7" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -156,7 +213,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_8">3XL</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_8" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_8" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -164,7 +222,8 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_9">4XL</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_9" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_9" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                                 <div class="col">
@@ -172,27 +231,27 @@ if($_SESSION['loggedIn'] == true):
                                         <div class="input-group-prepend">
                                             <span class="input-group-text" id="marime_10">5XL</span>
                                         </div>
-                                        <input onclick="this.select()" type="number" name="marime_10" value="0" class="form-control col-xs-3 marimi" style="width: 100px">
+                                        <input onclick="this.select()" type="number" name="marime_10" value="0"
+                                               class="form-control col-xs-3 marimi" style="width: 100px">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button type="submit" id="procesare-comanda" name="procesare-comanda">Adauga comanda</button>
+                    <button type="submit" id="procesare-comanda" name="procesare-comanda" class="btn btn-secondary">
+                        Adauga comanda
+                    </button>
                 </div>
             </form>
 
         </div>
     </div>
 </div>
-
-
 <?php
-endif;
+}
 ?>
 <script type="text/javascript">
     function notEmpty(){
-
         var e = document.getElementById("regiune");
         var selected_region = e.options[e.selectedIndex].value;
         if(selected_region == 0){
@@ -272,6 +331,13 @@ endif;
     notEmpty()
 
     document.getElementById("regiune").onchange = notEmpty;
+
+    function getIdOrder(x){
+        var row =  x.rowIndex;
+        window.location.href = "comanda.php?id=" + row;
+    }
+
+
 </script>
 </body>
 </html>

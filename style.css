@@ -15,3 +15,22 @@ input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
+.marimi input{
+    min-width: 30px; !important;
+}
+
+#ordersRow:hover{
+    background-color: grey;
+}
+
+.row-detalii-comanda{
+    border: 5px black;
+}
+
+.container-span{
+    margin-top:20px;
+}
+.container-order{
+    margin-left: 20px;
+}
