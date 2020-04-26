@@ -2,7 +2,7 @@
     require_once "connect.php";
     require_once "order.php";
     session_start();
-    if($_SESSION['loggedIn'] == false):
+    if(!isset($_SESSION['loggedIn']) || $_SESSION['loggedIn'] == false):
         header("location: login.php");
     endif;
     if(isset($_POST['deconect-btn'])){
@@ -36,7 +36,7 @@
                 header("location: index.php");
             }
         } else {
-            echo "nu e bine";
+            echo "Campul nume / id trebuie sa fie completat";
         }
     }
 ?>

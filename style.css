@@ -34,3 +34,8 @@ input::-webkit-inner-spin-button {
 .container-order{
     margin-left: 20px;
 }
+
+.container-register{
+    margin-top:100px;!important
+    border:10px !important;
+}

@@ -32,19 +32,42 @@
             }
         }
     }
+    if(isset($_POST['btn-register'])){
+        header("location: register.php");
+    }
     ?>
 
 <html>
 <head>
     <title>Pagina de conectare</title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-<form method="post">
-    <p>Utilizator</p>
-    <input type="text" name="username" placeholder="Utilizator">
-    <p>Parola</p>
-    <input type="password" name="password" placeholder="Parola">
-    <button type="submit" name="login-btn">Conectare</button>
-</form>
+<div class="container d-flex justify-content-center">
+    <div class="container-register">
+        <form method="post">
+            <div class="span-input">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1"><span class="material-icons">account_circle</span></span>
+                    </div>
+                    <input type="text" name="username" placeholder="Utilizator">
+                </div>
+            </div>
+            <div class="span-input">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1"><span class="material-icons">vpn_key</span>
+                    </div>
+                    <input type="password" name="password" placeholder="Parola">
+                </div>
+            </div>
+            <button class="btn btn-secondary" type="submit" name="login-btn">Conectare</button>
+            <button class="btn btn-secondary" type="submit" name="btn-register">Înregistrare</button>
+        </form>
+    </div>
+</div>
 </body>
 </html>
